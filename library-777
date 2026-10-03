@@ -6357,21 +6357,18 @@ for index = 0, 7 do
     local radians = math.rad(angle)
     local rayPosition = UDim2.new(0.5, math.sin(radians) * raySize, 0.5, -math.cos(radians) * raySize)
     local hoverRayPosition = UDim2.new(0.5, math.sin(radians) * hoverRaySize, 0.5, -math.cos(radians) * hoverRaySize)
-    local ray = Instance.new("Frame")
+    local ray = Instance.new("ImageLabel")
     ray.Name = "Ray"
     ray.AnchorPoint = Vector2.new(0.5, 0.5)
     ray.Position = rayPosition
-    ray.Size = UDim2.new(0, 3, 0, 8)
+    ray.Size = UDim2.new(0, 12, 0, 12)
     ray.Rotation = angle
-    ray.BackgroundColor3 = Color3.fromRGB(255, 35, 35)
-    ray.BorderSizePixel = 0
+    ray.BackgroundTransparency = 1
+    ray.Image = "rbxassetid://12715746107"
+    ray.ImageColor3 = Color3.fromRGB(255, 35, 35)
     ray.Active = false
     ray.ZIndex = toggleRays.ZIndex
     ray.Parent = toggleRays
-
-    local rayCorner = Instance.new("UICorner")
-    rayCorner.CornerRadius = UDim.new(1, 0)
-    rayCorner.Parent = ray
 
     rayPositions[#rayPositions + 1] = {Normal = rayPosition, Hover = hoverRayPosition}
     rayTweens[#rayTweens + 1] = ray
@@ -12543,26 +12540,53 @@ Tab:AddDropdown({
 local rainbowStroke
 
 rainbowStroke = Make("Stroke", MainFrame, {
-   Thickness = 2
+    Thickness = 3
 })
-rainbowStroke.Color = Color3.fromRGB(255, 255, 255)
+rainbowStroke.Color = Color3.fromRGB(255, 0, 0)
 
-local borderGradient = Instance.new("UIGradient")
-borderGradient.Color = ColorSequence.new({
-   ColorSequenceKeypoint.new(0, Color3.fromRGB(90, 0, 0)),
-   ColorSequenceKeypoint.new(0.38, Color3.fromRGB(255, 0, 0)),
-   ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 170, 170)),
-   ColorSequenceKeypoint.new(0.62, Color3.fromRGB(255, 0, 0)),
-   ColorSequenceKeypoint.new(1, Color3.fromRGB(90, 0, 0))
-})
-borderGradient.Parent = rainbowStroke
+local borderRunner = Instance.new("Frame")
+borderRunner.Name = "AnimatedRedBorderRunner"
+borderRunner.AnchorPoint = Vector2.new(0.5, 0.5)
+borderRunner.Size = UDim2.fromOffset(30, 4)
+borderRunner.BackgroundColor3 = Color3.fromRGB(255, 120, 120)
+borderRunner.BorderSizePixel = 0
+borderRunner.Active = false
+borderRunner.ZIndex = MainFrame.ZIndex + 100
+borderRunner.Visible = RainbowMainFrameDefault ~= false
+borderRunner.Parent = MainFrame
+rainbowStroke.Transparency = borderRunner.Visible and 0 or 1
 
-local borderAnimation = TweenService:Create(
-   borderGradient,
-   TweenInfo.new(2, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1),
-   {Rotation = 360}
-)
-borderAnimation:Play()
+local borderRunnerCorner = Instance.new("UICorner")
+borderRunnerCorner.CornerRadius = UDim.new(1, 0)
+borderRunnerCorner.Parent = borderRunner
+
+local borderDistance = 0
+task.spawn(function()
+    while isLibraryAlive() and borderRunner and borderRunner.Parent do
+        local deltaTime = RunService.RenderStepped:Wait()
+        local width = MainFrame.AbsoluteSize.X
+        local height = MainFrame.AbsoluteSize.Y
+        local perimeter = 2 * (width + height)
+
+        if perimeter > 0 then
+            borderDistance = (borderDistance + deltaTime * 220) % perimeter
+            local x, y, rotation
+
+            if borderDistance < width then
+                x, y, rotation = borderDistance, 2, 0
+            elseif borderDistance < width + height then
+                x, y, rotation = width - 2, borderDistance - width, 90
+            elseif borderDistance < (2 * width) + height then
+                x, y, rotation = width - (borderDistance - width - height), height - 2, 0
+            else
+                x, y, rotation = 2, height - (borderDistance - (2 * width) - height), 90
+            end
+
+            borderRunner.Position = UDim2.fromOffset(x, y)
+            borderRunner.Rotation = rotation
+        end
+    end
+end)
 
 Tab:AddToggle({
    Name = "Animated Red Border",
@@ -12570,6 +12594,7 @@ Tab:AddToggle({
     Default = RainbowMainFrameDefault,
     Callback = function(enabled)
         rainbowStroke.Transparency = enabled and 0 or 1
+        borderRunner.Visible = enabled
     end,
     __force_container = SettingTab
 })
