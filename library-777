@@ -169,6 +169,8 @@ local loadedThemes = safeLoadRemoteTable("https://raw.githubusercontent.com/as6c
 local loadedIcons = safeLoadRemoteTable("https://raw.githubusercontent.com/as6cd0/splibv2/main/Icons.lua", {})
 local themes = normalizeThemes(loadedThemes)
 themes.Red["Color Theme"] = Color3.fromRGB(255, 0, 0)
+themes.Red["Color Text"] = Color3.fromRGB(255, 0, 0)
+themes.Red["Color Dark Text"] = Color3.fromRGB(210, 35, 35)
 
 local splib = {
     IsPremium = false,
@@ -6344,14 +6346,21 @@ toggleRays.Active = false
 toggleRays.ZIndex = T.ZIndex + 1
 toggleRays.Parent = T
 
+local raySize = (sizeValue + 24) / 2 - 5
+local hoverRaySize = (sizeValue + 34) / 2 - 5
+local rayPositions = {}
+local rayTweens = {}
+local rayHoverTweenInfo = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
+
 for index = 0, 7 do
     local angle = index * 45
     local radians = math.rad(angle)
-    local rayRadius = (sizeValue + 24) / 2 - 5
+    local rayPosition = UDim2.new(0.5, math.sin(radians) * raySize, 0.5, -math.cos(radians) * raySize)
+    local hoverRayPosition = UDim2.new(0.5, math.sin(radians) * hoverRaySize, 0.5, -math.cos(radians) * hoverRaySize)
     local ray = Instance.new("Frame")
     ray.Name = "Ray"
     ray.AnchorPoint = Vector2.new(0.5, 0.5)
-    ray.Position = UDim2.new(0.5, math.sin(radians) * rayRadius, 0.5, -math.cos(radians) * rayRadius)
+    ray.Position = rayPosition
     ray.Size = UDim2.new(0, 3, 0, 8)
     ray.Rotation = angle
     ray.BackgroundColor3 = Color3.fromRGB(255, 35, 35)
@@ -6363,6 +6372,18 @@ for index = 0, 7 do
     local rayCorner = Instance.new("UICorner")
     rayCorner.CornerRadius = UDim.new(1, 0)
     rayCorner.Parent = ray
+
+    rayPositions[#rayPositions + 1] = {Normal = rayPosition, Hover = hoverRayPosition}
+    rayTweens[#rayTweens + 1] = ray
+end
+
+local function setRaysHovered(hovered)
+    for index, ray in ipairs(rayTweens) do
+        local positions = rayPositions[index]
+        TweenService:Create(ray, rayHoverTweenInfo, {
+            Position = hovered and positions.Hover or positions.Normal
+        }):Play()
+    end
 end
 
 local boostRaysUntil = 0
@@ -6514,11 +6535,13 @@ end
 T.MouseEnter:Connect(function()
     local hoverPosition = getCenteredPosition(normalSize, hoverSize, T.Position)
     TweenService:Create(T, tweenInfo2, {Size = hoverSize, Position = hoverPosition}):Play()
+    setRaysHovered(true)
 end)
 
 T.MouseLeave:Connect(function()
     local normalPosition = getCenteredPosition(hoverSize, normalSize, T.Position)
     TweenService:Create(T, tweenInfo2, {Size = normalSize, Position = normalPosition}):Play()
+    setRaysHovered(false)
 end)
 
 T.MouseButton1Click:Connect(function()
@@ -12522,19 +12545,21 @@ local rainbowStroke
 rainbowStroke = Make("Stroke", MainFrame, {
    Thickness = 2
 })
+rainbowStroke.Color = Color3.fromRGB(255, 255, 255)
 
 local borderGradient = Instance.new("UIGradient")
 borderGradient.Color = ColorSequence.new({
-   ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 0, 0)),
-   ColorSequenceKeypoint.new(0.45, Color3.fromRGB(255, 0, 0)),
-   ColorSequenceKeypoint.new(0.55, Color3.fromRGB(255, 80, 80)),
-   ColorSequenceKeypoint.new(1, Color3.fromRGB(120, 0, 0))
+   ColorSequenceKeypoint.new(0, Color3.fromRGB(90, 0, 0)),
+   ColorSequenceKeypoint.new(0.38, Color3.fromRGB(255, 0, 0)),
+   ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 170, 170)),
+   ColorSequenceKeypoint.new(0.62, Color3.fromRGB(255, 0, 0)),
+   ColorSequenceKeypoint.new(1, Color3.fromRGB(90, 0, 0))
 })
 borderGradient.Parent = rainbowStroke
 
 local borderAnimation = TweenService:Create(
    borderGradient,
-   TweenInfo.new(2.5, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1),
+   TweenInfo.new(2, Enum.EasingStyle.Linear, Enum.EasingDirection.InOut, -1),
    {Rotation = 360}
 )
 borderAnimation:Play()
