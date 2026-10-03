@@ -12485,65 +12485,12 @@ borderStroke.Transparency = 0
 borderStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 borderStroke.Parent = MainFrame
 
-local borderRunner = Instance.new("Frame")
-borderRunner.Name = "AnimatedRedBorderRunner"
-borderRunner.AnchorPoint = Vector2.new(0.5, 0.5)
-borderRunner.Size = UDim2.fromOffset(42, 6)
-borderRunner.BackgroundColor3 = Color3.fromRGB(255, 90, 90)
-borderRunner.BorderSizePixel = 0
-borderRunner.Active = false
-borderRunner.ZIndex = MainFrame.ZIndex + 100
-borderRunner.Visible = RainbowMainFrameDefault ~= false
-borderRunner.Parent = MainFrame
-
-local borderRunnerCorner = Instance.new("UICorner")
-borderRunnerCorner.CornerRadius = UDim.new(1, 0)
-borderRunnerCorner.Parent = borderRunner
-
-local borderDistance = 0
-task.spawn(function()
-    while isLibraryAlive() and borderRunner and borderRunner.Parent do
-        local deltaTime = RunService.RenderStepped:Wait()
-        local width = MainFrame.AbsoluteSize.X
-        local height = MainFrame.AbsoluteSize.Y
-        local pathWidth = math.max(width - 6, 0)
-        local pathHeight = math.max(height - 6, 0)
-        local perimeter = 2 * (pathWidth + pathHeight)
-
-        if perimeter > 0 then
-            borderDistance = (borderDistance + deltaTime * 220) % perimeter
-            local x, y
-
-            if borderDistance < pathWidth then
-                x, y = 3 + borderDistance, 3
-                borderRunner.Size = UDim2.fromOffset(42, 6)
-                borderRunner.Rotation = 0
-            elseif borderDistance < pathWidth + pathHeight then
-                x, y = width - 3, 3 + borderDistance - pathWidth
-                borderRunner.Size = UDim2.fromOffset(42, 6)
-                borderRunner.Rotation = 90
-            elseif borderDistance < (2 * pathWidth) + pathHeight then
-                x, y = width - 3 - (borderDistance - pathWidth - pathHeight), height - 3
-                borderRunner.Size = UDim2.fromOffset(42, 6)
-                borderRunner.Rotation = 0
-            else
-                x, y = 3, height - 3 - (borderDistance - (2 * pathWidth) - pathHeight)
-                borderRunner.Size = UDim2.fromOffset(42, 6)
-                borderRunner.Rotation = 90
-            end
-
-            borderRunner.Position = UDim2.fromOffset(x, y)
-        end
-    end
-end)
-
 Tab:AddToggle({
    Name = "Animated Red Border",
    Flag = "AnimatedRedBorder",
    Default = RainbowMainFrameDefault,
    Callback = function(enabled)
        borderStroke.Enabled = enabled
-       borderRunner.Visible = enabled
    end,
     __force_container = SettingTab
 })
