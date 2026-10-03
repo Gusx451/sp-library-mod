@@ -6352,8 +6352,8 @@ local rayPositions = {}
 local rayTweens = {}
 local rayHoverTweenInfo = TweenInfo.new(0.4, Enum.EasingStyle.Quint, Enum.EasingDirection.Out)
 
-for index = 0, 7 do
-    local angle = index * 45
+for index = 0, 1 do
+    local angle = index * 180
     local radians = math.rad(angle)
     local rayPosition = UDim2.new(0.5, math.sin(radians) * raySize, 0.5, -math.cos(radians) * raySize)
     local hoverRayPosition = UDim2.new(0.5, math.sin(radians) * hoverRaySize, 0.5, -math.cos(radians) * hoverRaySize)
@@ -6364,8 +6364,8 @@ for index = 0, 7 do
     ray.Size = UDim2.new(0, 12, 0, 12)
     ray.Rotation = angle
     ray.BackgroundTransparency = 1
-    ray.Image = "rbxassetid://12715746107"
-    ray.ImageColor3 = Color3.fromRGB(255, 35, 35)
+    ray.Image = "rbxassetid://134847749515245"
+    ray.ImageColor3 = Color3.fromRGB(255, 255, 255)
     ray.Active = false
     ray.ZIndex = toggleRays.ZIndex
     ray.Parent = toggleRays
@@ -12537,78 +12537,38 @@ Tab:AddDropdown({
 })
 
 
-local borderOverlay = Instance.new("Frame")
-borderOverlay.Name = "AnimatedRedBorder"
-borderOverlay.BackgroundTransparency = 1
-borderOverlay.BorderSizePixel = 0
-borderOverlay.Active = false
-borderOverlay.ZIndex = 9998
-borderOverlay.Visible = RainbowMainFrameDefault ~= false
-borderOverlay.Parent = ScreenGui
-
-local borderCorner = Instance.new("UICorner")
-borderCorner.CornerRadius = UDim.new(0, 8)
-borderCorner.Parent = borderOverlay
-
 local borderStroke = Instance.new("UIStroke")
+borderStroke.Name = "AnimatedRedBorder"
 borderStroke.Color = Color3.fromRGB(255, 0, 0)
-borderStroke.Thickness = 3
-borderStroke.Transparency = 0
+borderStroke.Thickness = 4
+borderStroke.Transparency = 0.1
 borderStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-borderStroke.Parent = borderOverlay
+borderStroke.Parent = MainFrame
 
-local borderRunner = Instance.new("Frame")
-borderRunner.Name = "AnimatedRedBorderRunner"
-borderRunner.AnchorPoint = Vector2.new(0.5, 0.5)
-borderRunner.Size = UDim2.fromOffset(38, 6)
-borderRunner.BackgroundColor3 = Color3.fromRGB(255, 170, 170)
-borderRunner.BorderSizePixel = 0
-borderRunner.Active = false
-borderRunner.ZIndex = 9999
-borderRunner.Parent = borderOverlay
-
-local borderRunnerCorner = Instance.new("UICorner")
-borderRunnerCorner.CornerRadius = UDim.new(1, 0)
-borderRunnerCorner.Parent = borderRunner
-
-local borderDistance = 0
-task.spawn(function()
-    while isLibraryAlive() and borderRunner and borderRunner.Parent do
-        local deltaTime = RunService.RenderStepped:Wait()
-        local width = MainFrame.AbsoluteSize.X
-        local height = MainFrame.AbsoluteSize.Y
-        local absolutePosition = MainFrame.AbsolutePosition
-        borderOverlay.Position = UDim2.fromOffset(absolutePosition.X, absolutePosition.Y)
-        borderOverlay.Size = UDim2.fromOffset(width, height)
-        local perimeter = 2 * (width + height)
-
-        if perimeter > 0 then
-            borderDistance = (borderDistance + deltaTime * 220) % perimeter
-            local x, y, rotation
-
-            if borderDistance < width then
-                x, y, rotation = borderDistance, 3, 0
-            elseif borderDistance < width + height then
-                x, y, rotation = width - 3, borderDistance - width, 90
-            elseif borderDistance < (2 * width) + height then
-                x, y, rotation = width - (borderDistance - width - height), height - 3, 0
-            else
-                x, y, rotation = 3, height - (borderDistance - (2 * width) - height), 90
-            end
-
-            borderRunner.Position = UDim2.fromOffset(x, y)
-            borderRunner.Rotation = rotation
-        end
-    end
-end)
+local borderAnimation = TweenService:Create(
+   borderStroke,
+   TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true),
+   {
+       Color = Color3.fromRGB(255, 135, 135),
+       Transparency = 0.55
+   }
+)
+borderAnimation:Play()
 
 Tab:AddToggle({
    Name = "Animated Red Border",
-   Flag = "RainbowMainFrame",
+   Flag = "AnimatedRedBorder",
    Default = RainbowMainFrameDefault,
    Callback = function(enabled)
-       borderOverlay.Visible = enabled
-    end,
+       borderStroke.Enabled = enabled
+       if enabled and borderAnimation.PlaybackState ~= Enum.PlaybackState.Playing then
+           borderAnimation:Play()
+       elseif not enabled then
+           borderAnimation:Cancel()
+           borderStroke.Color = Color3.fromRGB(255, 0, 0)
+           borderStroke.Transparency = 0.1
+       end
+   end,
     __force_container = SettingTab
 })
 
