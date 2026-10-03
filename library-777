@@ -12537,24 +12537,35 @@ Tab:AddDropdown({
 })
 
 
-local rainbowStroke
+local borderOverlay = Instance.new("Frame")
+borderOverlay.Name = "AnimatedRedBorder"
+borderOverlay.BackgroundTransparency = 1
+borderOverlay.BorderSizePixel = 0
+borderOverlay.Active = false
+borderOverlay.ZIndex = 9998
+borderOverlay.Visible = RainbowMainFrameDefault ~= false
+borderOverlay.Parent = ScreenGui
 
-rainbowStroke = Make("Stroke", MainFrame, {
-    Thickness = 3
-})
-rainbowStroke.Color = Color3.fromRGB(255, 0, 0)
+local borderCorner = Instance.new("UICorner")
+borderCorner.CornerRadius = UDim.new(0, 8)
+borderCorner.Parent = borderOverlay
+
+local borderStroke = Instance.new("UIStroke")
+borderStroke.Color = Color3.fromRGB(255, 0, 0)
+borderStroke.Thickness = 3
+borderStroke.Transparency = 0
+borderStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+borderStroke.Parent = borderOverlay
 
 local borderRunner = Instance.new("Frame")
 borderRunner.Name = "AnimatedRedBorderRunner"
 borderRunner.AnchorPoint = Vector2.new(0.5, 0.5)
-borderRunner.Size = UDim2.fromOffset(30, 4)
-borderRunner.BackgroundColor3 = Color3.fromRGB(255, 120, 120)
+borderRunner.Size = UDim2.fromOffset(38, 6)
+borderRunner.BackgroundColor3 = Color3.fromRGB(255, 170, 170)
 borderRunner.BorderSizePixel = 0
 borderRunner.Active = false
-borderRunner.ZIndex = MainFrame.ZIndex + 100
-borderRunner.Visible = RainbowMainFrameDefault ~= false
-borderRunner.Parent = MainFrame
-rainbowStroke.Transparency = borderRunner.Visible and 0 or 1
+borderRunner.ZIndex = 9999
+borderRunner.Parent = borderOverlay
 
 local borderRunnerCorner = Instance.new("UICorner")
 borderRunnerCorner.CornerRadius = UDim.new(1, 0)
@@ -12566,6 +12577,9 @@ task.spawn(function()
         local deltaTime = RunService.RenderStepped:Wait()
         local width = MainFrame.AbsoluteSize.X
         local height = MainFrame.AbsoluteSize.Y
+        local absolutePosition = MainFrame.AbsolutePosition
+        borderOverlay.Position = UDim2.fromOffset(absolutePosition.X, absolutePosition.Y)
+        borderOverlay.Size = UDim2.fromOffset(width, height)
         local perimeter = 2 * (width + height)
 
         if perimeter > 0 then
@@ -12573,13 +12587,13 @@ task.spawn(function()
             local x, y, rotation
 
             if borderDistance < width then
-                x, y, rotation = borderDistance, 2, 0
+                x, y, rotation = borderDistance, 3, 0
             elseif borderDistance < width + height then
-                x, y, rotation = width - 2, borderDistance - width, 90
+                x, y, rotation = width - 3, borderDistance - width, 90
             elseif borderDistance < (2 * width) + height then
-                x, y, rotation = width - (borderDistance - width - height), height - 2, 0
+                x, y, rotation = width - (borderDistance - width - height), height - 3, 0
             else
-                x, y, rotation = 2, height - (borderDistance - (2 * width) - height), 90
+                x, y, rotation = 3, height - (borderDistance - (2 * width) - height), 90
             end
 
             borderRunner.Position = UDim2.fromOffset(x, y)
@@ -12591,10 +12605,9 @@ end)
 Tab:AddToggle({
    Name = "Animated Red Border",
    Flag = "RainbowMainFrame",
-    Default = RainbowMainFrameDefault,
-    Callback = function(enabled)
-        rainbowStroke.Transparency = enabled and 0 or 1
-        borderRunner.Visible = enabled
+   Default = RainbowMainFrameDefault,
+   Callback = function(enabled)
+       borderOverlay.Visible = enabled
     end,
     __force_container = SettingTab
 })
